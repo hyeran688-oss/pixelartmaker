@@ -1,0 +1,2147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>픽셀아트 색칠 학습지 제작기</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --panel: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #d1d5db;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --danger: #dc2626;
+      --danger-dark: #b91c1c;
+      --soft: #f9fafb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      height: 56px;
+      padding: 10px 18px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 18px;
+      white-space: nowrap;
+    }
+
+    header p {
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    main {
+      height: calc(100vh - 56px);
+      padding: 10px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 10px;
+    }
+
+    .left-panel,
+    .right-panel {
+      min-height: 0;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      background: var(--soft);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .panel-header h2 {
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .zoom-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .zoom-controls button {
+      height: 28px;
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+
+    .zoom-label {
+      min-width: 44px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .settings {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1.3fr 120px 90px 90px 110px 110px;
+      gap: 8px;
+      align-items: end;
+    }
+
+    label {
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="file"],
+    select,
+    button {
+      height: 32px;
+      padding: 6px 8px;
+      font-size: 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+    }
+
+    input[type="file"] {
+      padding: 5px;
+    }
+
+    input[type="color"] {
+      cursor: pointer;
+    }
+
+    button {
+      border: none;
+      background: var(--text);
+      color: white;
+      cursor: pointer;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    button:hover {
+      background: #374151;
+    }
+
+    button.primary {
+      background: var(--primary);
+    }
+
+    button.primary:hover {
+      background: var(--primary-dark);
+    }
+
+    button.soft {
+      background: #e5e7eb;
+      color: var(--text);
+    }
+
+    button.soft:hover {
+      background: #d1d5db;
+    }
+
+    button.danger {
+      background: var(--danger);
+      font-size: 11px;
+      height: 28px;
+      padding: 4px 7px;
+    }
+
+    button.danger:hover {
+      background: var(--danger-dark);
+    }
+
+    button.active {
+      background: var(--primary);
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .action-row {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .undo-group {
+      margin-left: auto;
+      display: flex;
+      gap: 6px;
+    }
+
+    .workspace {
+      min-height: 0;
+      flex: 1;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    .canvas-box {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: white;
+    }
+
+    .canvas-title {
+      height: 32px;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border);
+      background: var(--soft);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .canvas-wrap {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 10px;
+      text-align: left;
+      background: #f3f4f6;
+    }
+
+    .canvas-inner {
+      display: inline-block;
+      transform-origin: top left;
+      transition: transform 0.05s linear;
+    }
+
+    canvas {
+      background: white;
+      max-width: none;
+      display: block;
+    }
+
+    canvas.editable {
+      cursor: crosshair;
+    }
+
+    .image-area {
+      height: 170px;
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .image-title {
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .image-preview-box {
+      flex: 1;
+      min-height: 0;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      background: var(--soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 8px;
+    }
+
+    .image-preview-box img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: none;
+    }
+
+    .tool-area,
+    .bulk-area,
+    .number-bulk-area {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 7px;
+    }
+
+    .tool-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .tool-row button {
+      flex: 1;
+      min-width: 70px;
+    }
+
+    .tool-row label {
+      flex: 1;
+      min-width: 110px;
+    }
+
+    .color-preview {
+      width: 28px;
+      height: 28px;
+      border: 1px solid #111827;
+      border-radius: 5px;
+      flex-shrink: 0;
+      background: white;
+    }
+
+    .bulk-row {
+      display: grid;
+      grid-template-columns: 1fr 48px 72px;
+      gap: 6px;
+      align-items: end;
+    }
+
+    .number-bulk-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 72px;
+      gap: 6px;
+      align-items: end;
+    }
+
+    .bulk-row input[type="color"],
+    .palette-top input[type="color"] {
+      width: 100%;
+      height: 32px;
+      padding: 0;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: white;
+    }
+
+    .palette-area {
+      min-height: 0;
+      flex: 1;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .palette-top {
+      display: flex;
+      gap: 6px;
+      align-items: end;
+      margin-bottom: 8px;
+    }
+
+    .palette-top label {
+      flex: 1;
+    }
+
+    .palette-editor {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--soft);
+      padding: 6px;
+    }
+
+    .palette-row {
+      display: grid;
+      grid-template-columns: 42px 34px 1fr 44px 42px;
+      gap: 5px;
+      align-items: center;
+      padding: 5px;
+      margin-bottom: 5px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      background: white;
+    }
+
+    .palette-row .num {
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .palette-row input[type="color"] {
+      width: 32px;
+      height: 28px;
+      padding: 0;
+      border: none;
+      background: none;
+    }
+
+    .palette-row input[type="text"] {
+      height: 28px;
+      font-size: 11px;
+      padding: 4px 5px;
+    }
+
+    .usage {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .help {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 5px;
+      line-height: 1.35;
+    }
+
+    @media (max-width: 1100px) {
+      body {
+        height: auto;
+        overflow: auto;
+      }
+
+      main {
+        height: auto;
+        grid-template-columns: 1fr;
+      }
+
+      .settings {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .right-panel {
+        min-height: 820px;
+      }
+
+      .undo-group {
+        margin-left: 0;
+      }
+    }
+
+    @media (max-width: 720px) {
+      header {
+        height: auto;
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .panel-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .settings {
+        grid-template-columns: 1fr;
+      }
+
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>픽셀아트 색칠 학습지 제작기</h1>
+    <p>사진으로 만들거나 빈 도안에서 시작하고, 색상과 번호를 직접 정리합니다.</p>
+  </div>
+</header>
+
+<main>
+  <section class="left-panel">
+    <div class="panel-header">
+      <h2>도안 작업 화면</h2>
+
+      <div class="zoom-controls">
+        <button id="zoomOutBtn" class="soft">줌 -</button>
+        <button id="zoomResetBtn" class="soft">100%</button>
+        <button id="zoomInBtn" class="soft">줌 +</button>
+        <span id="zoomLabel" class="zoom-label">100%</span>
+      </div>
+    </div>
+
+    <div class="settings">
+      <label>
+        제목
+        <input type="text" id="artTitle" value="픽셀아트 색칠 학습지" />
+      </label>
+
+      <label>
+        사진
+        <input type="file" id="imageInput" accept="image/*" />
+      </label>
+
+      <label>
+        가로 칸
+        <input type="number" id="gridWidth" value="30" min="5" max="100" />
+      </label>
+
+      <label>
+        세로 칸
+        <input type="number" id="gridHeight" value="40" min="5" max="100" />
+      </label>
+
+      <label>
+        추출 색상 수
+        <input type="number" id="colorCount" value="16" min="2" max="40" />
+      </label>
+
+      <label>
+        최종 색상 수
+        <input type="number" id="finalColorLimit" value="12" min="1" max="13" />
+      </label>
+    </div>
+
+    <div class="action-row">
+      <button id="generateBtn" class="primary">사진으로 만들기</button>
+      <button id="blankBtn" class="soft">빈 도안 만들기</button>
+      <button id="autoMapTo12Btn" class="soft" disabled>12색 매핑</button>
+      <button id="applyColorLimitBtn" class="soft" disabled>색상 수 적용</button>
+      <button id="downloadBtn">PNG 저장</button>
+
+      <div class="undo-group">
+        <button id="undoBtn" class="soft" disabled>실행취소</button>
+        <button id="redoBtn" class="soft" disabled>다시실행</button>
+      </div>
+    </div>
+
+    <div class="workspace">
+      <div class="canvas-box">
+        <div class="canvas-title">
+          <span>숫자 색칠 학습지</span>
+          <span>편집 가능</span>
+        </div>
+        <div class="canvas-wrap">
+          <div class="canvas-inner zoom-target">
+            <canvas id="worksheetCanvas" class="editable"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="canvas-box">
+        <div class="canvas-title">
+          <span>완성 예시</span>
+          <span>편집 가능</span>
+        </div>
+        <div class="canvas-wrap">
+          <div class="canvas-inner zoom-target">
+            <canvas id="previewCanvas" class="editable"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="right-panel">
+    <div class="image-area">
+      <div class="image-title">원본 이미지</div>
+      <div class="image-preview-box">
+        <img id="previewImage" alt="업로드한 이미지 미리보기" />
+        <div id="emptyImage">사진을 업로드하면<br />여기에 표시됩니다.</div>
+      </div>
+    </div>
+
+    <div class="tool-area">
+      <div class="section-title">편집 도구</div>
+      <div class="tool-row">
+        <button id="pencilToolBtn" class="active">연필</button>
+        <button id="eraserToolBtn">지우개</button>
+      </div>
+      <div class="tool-row" style="margin-top:6px;">
+        <label>
+          연필 번호
+          <select id="pencilNumberSelect"></select>
+        </label>
+        <div class="color-preview" id="pencilColorPreview"></div>
+      </div>
+      <div class="help">
+        숫자 도안과 완성 예시 둘 다 클릭/드래그해서 수정할 수 있습니다.
+      </div>
+    </div>
+
+    <div class="bulk-area">
+      <div class="section-title">일괄 색변경</div>
+      <div class="bulk-row">
+        <label>
+          대상 번호
+          <select id="bulkTargetSelect"></select>
+        </label>
+
+        <label>
+          새 색
+          <input type="color" id="bulkColorInput" value="#ff0000" />
+        </label>
+
+        <button id="bulkApplyBtn" class="soft" disabled>적용</button>
+      </div>
+      <div class="help">
+        번호는 유지하고, 해당 번호의 색만 바꿉니다.
+      </div>
+    </div>
+
+    <div class="number-bulk-area">
+      <div class="section-title">번호 일괄변경</div>
+      <div class="number-bulk-row">
+        <label>
+          바꿀 번호
+          <select id="numberFromSelect"></select>
+        </label>
+
+        <label>
+          변경할 번호
+          <select id="numberToSelect"></select>
+        </label>
+
+        <button id="numberBulkApplyBtn" class="soft" disabled>변경</button>
+      </div>
+      <div class="help">
+        예: 7번을 3번으로 바꾸면 모든 7번 칸이 3번 칸으로 바뀝니다.
+      </div>
+    </div>
+
+    <div class="palette-area">
+      <div class="section-title">색상 팔레트</div>
+
+      <div class="palette-top">
+        <label>
+          추가 색
+          <input type="color" id="newColorInput" value="#FFFFFF" />
+        </label>
+        <button id="addColorBtn" class="primary" disabled>추가</button>
+      </div>
+
+      <div id="paletteEditor" class="palette-editor">
+        <div class="help">도안을 만들면 팔레트가 표시됩니다.</div>
+      </div>
+
+      <div class="help">
+        팔레트 색을 바꾸면 해당 번호 전체가 자동으로 바뀝니다. 삭제한 색은 흰색 번호로 대체됩니다.
+      </div>
+    </div>
+  </aside>
+</main>
+
+<script>
+  const imageInput = document.getElementById("imageInput");
+  const artTitleInput = document.getElementById("artTitle");
+  const generateBtn = document.getElementById("generateBtn");
+  const blankBtn = document.getElementById("blankBtn");
+  const autoMapTo12Btn = document.getElementById("autoMapTo12Btn");
+  const applyColorLimitBtn = document.getElementById("applyColorLimitBtn");
+  const downloadBtn = document.getElementById("downloadBtn");
+
+  const undoBtn = document.getElementById("undoBtn");
+  const redoBtn = document.getElementById("redoBtn");
+
+  const zoomOutBtn = document.getElementById("zoomOutBtn");
+  const zoomResetBtn = document.getElementById("zoomResetBtn");
+  const zoomInBtn = document.getElementById("zoomInBtn");
+  const zoomLabel = document.getElementById("zoomLabel");
+
+  const pencilToolBtn = document.getElementById("pencilToolBtn");
+  const eraserToolBtn = document.getElementById("eraserToolBtn");
+  const pencilNumberSelect = document.getElementById("pencilNumberSelect");
+  const pencilColorPreview = document.getElementById("pencilColorPreview");
+
+  const bulkTargetSelect = document.getElementById("bulkTargetSelect");
+  const bulkColorInput = document.getElementById("bulkColorInput");
+  const bulkApplyBtn = document.getElementById("bulkApplyBtn");
+
+  const numberFromSelect = document.getElementById("numberFromSelect");
+  const numberToSelect = document.getElementById("numberToSelect");
+  const numberBulkApplyBtn = document.getElementById("numberBulkApplyBtn");
+
+  const worksheetCanvas = document.getElementById("worksheetCanvas");
+  const worksheetCtx = worksheetCanvas.getContext("2d");
+
+  const previewCanvas = document.getElementById("previewCanvas");
+  const previewCtx = previewCanvas.getContext("2d");
+
+  const paletteEditor = document.getElementById("paletteEditor");
+  const previewImage = document.getElementById("previewImage");
+  const emptyImage = document.getElementById("emptyImage");
+
+  const newColorInput = document.getElementById("newColorInput");
+  const addColorBtn = document.getElementById("addColorBtn");
+
+  let uploadedImage = null;
+  let worksheetData = null;
+  let originalPalette = null;
+  let currentPalette = null;
+  let lastPixelData = null;
+
+  let currentTool = "pencil";
+  let isDrawing = false;
+  let hasSavedDragState = false;
+
+  let zoomLevel = 1;
+  const minZoom = 0.4;
+  const maxZoom = 3;
+  const zoomStep = 0.1;
+
+  const undoStack = [];
+  const redoStack = [];
+  const maxHistory = 80;
+
+  const cellSize = 22;
+  const margin = 40;
+  const titleHeight = 56;
+
+  const pencil12Hex = [
+    "#FFFFFF",
+    "#E60012",
+    "#F39800",
+    "#FFF100",
+    "#8FC31F",
+    "#009944",
+    "#00A0E9",
+    "#0068B7",
+    "#601986",
+    "#8B4513",
+    "#FF99CC",
+    "#FFDAB9",
+    "#000000"
+  ];
+
+  const pencilPalette = pencil12Hex.map(hexToRgb);
+
+  zoomOutBtn.addEventListener("click", function () {
+    setZoom(zoomLevel - zoomStep);
+  });
+
+  zoomInBtn.addEventListener("click", function () {
+    setZoom(zoomLevel + zoomStep);
+  });
+
+  zoomResetBtn.addEventListener("click", function () {
+    setZoom(1);
+  });
+
+  function setZoom(value) {
+    zoomLevel = Math.min(maxZoom, Math.max(minZoom, value));
+    zoomLevel = Math.round(zoomLevel * 100) / 100;
+    applyZoom();
+  }
+
+  function applyZoom() {
+    document.querySelectorAll(".zoom-target").forEach((el) => {
+      el.style.transform = `scale(${zoomLevel})`;
+      el.style.width = `${100 / zoomLevel}%`;
+      el.style.height = `${100 / zoomLevel}%`;
+    });
+
+    zoomLabel.textContent = `${Math.round(zoomLevel * 100)}%`;
+  }
+
+  imageInput.addEventListener("change", function (event) {
+    const file = event.target.files[0];
+
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+      const img = new Image();
+
+      img.onload = function () {
+        uploadedImage = img;
+        previewImage.src = img.src;
+        previewImage.style.display = "block";
+        emptyImage.style.display = "none";
+
+        autoMapTo12Btn.disabled = true;
+        applyColorLimitBtn.disabled = true;
+        addColorBtn.disabled = true;
+        bulkApplyBtn.disabled = true;
+        numberBulkApplyBtn.disabled = true;
+      };
+
+      img.src = e.target.result;
+    };
+
+    reader.readAsDataURL(file);
+  });
+
+  artTitleInput.addEventListener("input", function () {
+    if (worksheetData) {
+      drawAll(worksheetData);
+    }
+  });
+
+  generateBtn.addEventListener("click", function () {
+    generateWorksheet();
+  });
+
+  blankBtn.addEventListener("click", function () {
+    createBlankWorksheet();
+  });
+
+  function generateWorksheet() {
+    if (!uploadedImage) {
+      alert("먼저 사진을 업로드해주세요. 처음부터 만들려면 '빈 도안 만들기'를 눌러주세요.");
+      return;
+    }
+
+    const gridWidth = Number(document.getElementById("gridWidth").value);
+    const gridHeight = Number(document.getElementById("gridHeight").value);
+    const colorCount = Number(document.getElementById("colorCount").value);
+
+    clearHistory();
+    createFromOriginalColors(uploadedImage, gridWidth, gridHeight, colorCount);
+  }
+
+  function createBlankWorksheet() {
+    const gridWidth = Number(document.getElementById("gridWidth").value);
+    const gridHeight = Number(document.getElementById("gridHeight").value);
+
+    if (!gridWidth || !gridHeight || gridWidth < 1 || gridHeight < 1) {
+      alert("가로/세로 칸 수를 올바르게 입력해주세요.");
+      return;
+    }
+
+    clearHistory();
+
+    currentPalette = [
+      { r: 255, g: 255, b: 255 },
+      { r: 230, g: 0, b: 18 },
+      { r: 255, g: 241, b: 0 },
+      { r: 0, g: 104, b: 183 },
+      { r: 0, g: 0, b: 0 }
+    ];
+
+    originalPalette = clonePalette(currentPalette);
+
+    const numberGrid = [];
+
+    for (let y = 0; y < gridHeight; y++) {
+      const row = [];
+
+      for (let x = 0; x < gridWidth; x++) {
+        row.push(0);
+      }
+
+      numberGrid.push(row);
+    }
+
+    worksheetData = {
+      gridWidth,
+      gridHeight,
+      palette: currentPalette,
+      numberGrid
+    };
+
+    enableEditingButtons();
+    refreshAll(2);
+    applyZoom();
+  }
+
+  function createFromOriginalColors(img, gridWidth, gridHeight, colorCount) {
+    createPixelDataOnly(img, gridWidth, gridHeight);
+
+    const pixels = lastPixelData.pixels;
+    let palette = createPalette(pixels, colorCount);
+
+    palette = ensureWhiteInPalette(palette);
+
+    originalPalette = clonePalette(palette);
+    currentPalette = clonePalette(palette);
+
+    const numberGrid = quantizeToPalette(pixels, gridWidth, gridHeight, currentPalette);
+
+    worksheetData = {
+      gridWidth,
+      gridHeight,
+      palette: currentPalette,
+      numberGrid
+    };
+
+    enableEditingButtons();
+    refreshAll();
+    updateHistoryButtons();
+    applyZoom();
+  }
+
+  function enableEditingButtons() {
+    autoMapTo12Btn.disabled = false;
+    applyColorLimitBtn.disabled = false;
+    addColorBtn.disabled = false;
+    bulkApplyBtn.disabled = false;
+    numberBulkApplyBtn.disabled = currentPalette.length < 2;
+  }
+
+  autoMapTo12Btn.addEventListener("click", function () {
+    if (!worksheetData || !originalPalette) {
+      alert("먼저 도안을 생성해주세요.");
+      return;
+    }
+
+    saveStateForUndo();
+
+    const mappedPalette = originalPalette.map((color) => {
+      if (isNearWhite(color)) {
+        return { r: 255, g: 255, b: 255 };
+      }
+
+      const nearest = findNearestColorIndex(color, pencilPalette);
+      return pencilPalette[nearest];
+    });
+
+    currentPalette = mergeDuplicateColors(mappedPalette);
+    remapNumberGridToNewPalette(mappedPalette, currentPalette);
+
+    worksheetData.palette = currentPalette;
+    originalPalette = clonePalette(currentPalette);
+
+    refreshAll();
+  });
+
+  applyColorLimitBtn.addEventListener("click", function () {
+    if (!worksheetData || !currentPalette) {
+      alert("먼저 학습지를 생성해주세요.");
+      return;
+    }
+
+    saveStateForUndo();
+
+    const limit = Number(document.getElementById("finalColorLimit").value);
+    applyColorLimit(limit);
+  });
+
+  function applyColorLimit(limit) {
+    if (!worksheetData || !currentPalette) {
+      return;
+    }
+
+    const counts = countUsage(worksheetData.numberGrid, currentPalette.length);
+
+    const candidates = currentPalette.map((color, index) => ({
+      index,
+      count: counts[index] || 0,
+      color
+    }));
+
+    candidates.sort((a, b) => {
+      const aw = isNearWhite(a.color) ? 100000 : 0;
+      const bw = isNearWhite(b.color) ? 100000 : 0;
+      return (b.count + bw) - (a.count + aw);
+    });
+
+    const keep = candidates.slice(0, limit).map(item => item.index);
+
+    if (keep.length === 0) {
+      return;
+    }
+
+    const newPalette = keep.map(oldIndex => ({ ...currentPalette[oldIndex] }));
+    const keptColors = newPalette;
+
+    const oldToNew = {};
+    keep.forEach((oldIndex, idx) => {
+      oldToNew[oldIndex] = idx;
+    });
+
+    for (let y = 0; y < worksheetData.gridHeight; y++) {
+      for (let x = 0; x < worksheetData.gridWidth; x++) {
+        const oldNumber = worksheetData.numberGrid[y][x];
+
+        if (oldToNew[oldNumber] !== undefined) {
+          worksheetData.numberGrid[y][x] = oldToNew[oldNumber];
+        } else {
+          const oldColor = currentPalette[oldNumber];
+          const nearestKeptIdx = findNearestColorIndex(oldColor, keptColors);
+          worksheetData.numberGrid[y][x] = nearestKeptIdx;
+        }
+      }
+    }
+
+    currentPalette = clonePalette(newPalette);
+    worksheetData.palette = currentPalette;
+    originalPalette = clonePalette(currentPalette);
+
+    refreshAll();
+  }
+
+  addColorBtn.addEventListener("click", function () {
+    addPaletteColor(newColorInput.value);
+  });
+
+  function addPaletteColor(hex) {
+    if (!worksheetData || !currentPalette) {
+      alert("먼저 도안을 생성해주세요.");
+      return;
+    }
+
+    saveStateForUndo();
+
+    const color = hexToRgb(hex);
+
+    const newPalette = clonePalette(currentPalette);
+    newPalette.push(color);
+
+    currentPalette = newPalette;
+    worksheetData.palette = currentPalette;
+    originalPalette = clonePalette(currentPalette);
+
+    const newColorNumber = currentPalette.length;
+    refreshAll(newColorNumber);
+  }
+
+  bulkApplyBtn.addEventListener("click", function () {
+    applyBulkColorChange();
+  });
+
+  function applyBulkColorChange() {
+    if (!worksheetData || !currentPalette) {
+      alert("먼저 도안을 생성해주세요.");
+      return;
+    }
+
+    const displayNumber = Number(bulkTargetSelect.value);
+
+    if (!displayNumber || displayNumber < 1 || displayNumber > currentPalette.length) {
+      alert("변경할 번호를 선택해주세요.");
+      return;
+    }
+
+    saveStateForUndo();
+
+    const index = displayNumber - 1;
+    const newColor = hexToRgb(bulkColorInput.value);
+
+    const newPalette = clonePalette(currentPalette);
+    newPalette[index] = newColor;
+
+    currentPalette = newPalette;
+    worksheetData.palette = currentPalette;
+    originalPalette = clonePalette(currentPalette);
+
+    refreshAll(displayNumber);
+  }
+
+  numberBulkApplyBtn.addEventListener("click", function () {
+    applyBulkNumberChange();
+  });
+
+  function applyBulkNumberChange() {
+    if (!worksheetData || !currentPalette) {
+      alert("먼저 도안을 생성해주세요.");
+      return;
+    }
+
+    const fromNumber = Number(numberFromSelect.value);
+    const toNumber = Number(numberToSelect.value);
+
+    if (!fromNumber || !toNumber) {
+      alert("바꿀 번호와 변경할 번호를 선택해주세요.");
+      return;
+    }
+
+    if (fromNumber === toNumber) {
+      alert("서로 다른 번호를 선택해주세요.");
+      return;
+    }
+
+    const fromIndex = fromNumber - 1;
+    const toIndex = toNumber - 1;
+
+    if (
+      fromIndex < 0 ||
+      fromIndex >= currentPalette.length ||
+      toIndex < 0 ||
+      toIndex >= currentPalette.length
+    ) {
+      alert("번호 범위가 올바르지 않습니다.");
+      return;
+    }
+
+    saveStateForUndo();
+
+    for (let y = 0; y < worksheetData.gridHeight; y++) {
+      for (let x = 0; x < worksheetData.gridWidth; x++) {
+        if (worksheetData.numberGrid[y][x] === fromIndex) {
+          worksheetData.numberGrid[y][x] = toIndex;
+        }
+      }
+    }
+
+    refreshAll(toNumber);
+  }
+
+  downloadBtn.addEventListener("click", function () {
+    if (!worksheetData) {
+      alert("먼저 학습지를 만들어주세요.");
+      return;
+    }
+
+    const title = getArtTitle();
+    const fileName = makeSafeFileName(title) + ".png";
+
+    const link = document.createElement("a");
+    link.download = fileName;
+    link.href = worksheetCanvas.toDataURL("image/png");
+    link.click();
+  });
+
+  undoBtn.addEventListener("click", undo);
+  redoBtn.addEventListener("click", redo);
+
+  function createSnapshot() {
+    if (!worksheetData || !currentPalette) {
+      return null;
+    }
+
+    return {
+      worksheetData: {
+        gridWidth: worksheetData.gridWidth,
+        gridHeight: worksheetData.gridHeight,
+        palette: clonePalette(currentPalette),
+        numberGrid: cloneGrid(worksheetData.numberGrid)
+      },
+      originalPalette: originalPalette ? clonePalette(originalPalette) : null,
+      currentPalette: clonePalette(currentPalette)
+    };
+  }
+
+  function restoreSnapshot(snapshot) {
+    if (!snapshot) {
+      return;
+    }
+
+    currentPalette = clonePalette(snapshot.currentPalette);
+    originalPalette = snapshot.originalPalette
+      ? clonePalette(snapshot.originalPalette)
+      : null;
+
+    worksheetData = {
+      gridWidth: snapshot.worksheetData.gridWidth,
+      gridHeight: snapshot.worksheetData.gridHeight,
+      palette: currentPalette,
+      numberGrid: cloneGrid(snapshot.worksheetData.numberGrid)
+    };
+
+    refreshAll();
+    updateHistoryButtons();
+  }
+
+  function saveStateForUndo() {
+    const snapshot = createSnapshot();
+
+    if (!snapshot) {
+      return;
+    }
+
+    undoStack.push(snapshot);
+
+    if (undoStack.length > maxHistory) {
+      undoStack.shift();
+    }
+
+    redoStack.length = 0;
+    updateHistoryButtons();
+  }
+
+  function undo() {
+    if (undoStack.length === 0) {
+      return;
+    }
+
+    const current = createSnapshot();
+    const previous = undoStack.pop();
+
+    if (current) {
+      redoStack.push(current);
+    }
+
+    restoreSnapshot(previous);
+  }
+
+  function redo() {
+    if (redoStack.length === 0) {
+      return;
+    }
+
+    const current = createSnapshot();
+    const next = redoStack.pop();
+
+    if (current) {
+      undoStack.push(current);
+    }
+
+    restoreSnapshot(next);
+  }
+
+  function clearHistory() {
+    undoStack.length = 0;
+    redoStack.length = 0;
+    updateHistoryButtons();
+  }
+
+  function updateHistoryButtons() {
+    undoBtn.disabled = undoStack.length === 0;
+    redoBtn.disabled = redoStack.length === 0;
+  }
+
+  pencilToolBtn.addEventListener("click", function () {
+    currentTool = "pencil";
+    pencilToolBtn.classList.add("active");
+    eraserToolBtn.classList.remove("active");
+  });
+
+  eraserToolBtn.addEventListener("click", function () {
+    currentTool = "eraser";
+    eraserToolBtn.classList.add("active");
+    pencilToolBtn.classList.remove("active");
+  });
+
+  pencilNumberSelect.addEventListener("change", updatePencilColorPreview);
+
+  function updatePencilColorPreview() {
+    const number = Number(pencilNumberSelect.value);
+    const index = number - 1;
+
+    if (currentPalette && currentPalette[index]) {
+      pencilColorPreview.style.backgroundColor = rgbToString(currentPalette[index]);
+    } else {
+      pencilColorPreview.style.backgroundColor = "#ffffff";
+    }
+  }
+
+  function setupEditableCanvas(canvas) {
+    canvas.addEventListener("mousedown", function (e) {
+      if (!worksheetData) {
+        return;
+      }
+
+      isDrawing = true;
+      hasSavedDragState = false;
+      applyToolAt(canvas, e);
+    });
+
+    canvas.addEventListener("mousemove", function (e) {
+      if (!isDrawing || !worksheetData) {
+        return;
+      }
+
+      applyToolAt(canvas, e);
+    });
+
+    canvas.addEventListener("mouseup", function () {
+      isDrawing = false;
+      hasSavedDragState = false;
+    });
+
+    canvas.addEventListener("mouseleave", function () {
+      isDrawing = false;
+      hasSavedDragState = false;
+    });
+
+    canvas.addEventListener("touchstart", function (e) {
+      if (!worksheetData) {
+        return;
+      }
+
+      e.preventDefault();
+      isDrawing = true;
+      hasSavedDragState = false;
+      applyToolAt(canvas, e.touches[0]);
+    });
+
+    canvas.addEventListener("touchmove", function (e) {
+      if (!isDrawing || !worksheetData) {
+        return;
+      }
+
+      e.preventDefault();
+      applyToolAt(canvas, e.touches[0]);
+    });
+
+    canvas.addEventListener("touchend", function () {
+      isDrawing = false;
+      hasSavedDragState = false;
+    });
+  }
+
+  setupEditableCanvas(worksheetCanvas);
+  setupEditableCanvas(previewCanvas);
+
+  function applyToolAt(canvas, e) {
+    if (!worksheetData) {
+      return;
+    }
+
+    const rect = canvas.getBoundingClientRect();
+
+    const canvasX = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const canvasY = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+    let startX;
+    let startY;
+
+    if (canvas === worksheetCanvas) {
+      startX = margin;
+      startY = titleHeight;
+    } else {
+      startX = 20;
+      startY = 46;
+    }
+
+    const gridX = Math.floor((canvasX - startX) / cellSize);
+    const gridY = Math.floor((canvasY - startY) / cellSize);
+
+    if (
+      gridX < 0 ||
+      gridX >= worksheetData.gridWidth ||
+      gridY < 0 ||
+      gridY >= worksheetData.gridHeight
+    ) {
+      return;
+    }
+
+    let newIndex;
+
+    if (currentTool === "eraser") {
+      newIndex = getWhiteColorIndex();
+    } else {
+      newIndex = Number(pencilNumberSelect.value) - 1;
+    }
+
+    if (newIndex < 0 || newIndex >= currentPalette.length) {
+      return;
+    }
+
+    if (worksheetData.numberGrid[gridY][gridX] === newIndex) {
+      return;
+    }
+
+    if (!hasSavedDragState) {
+      saveStateForUndo();
+      hasSavedDragState = true;
+    }
+
+    worksheetData.numberGrid[gridY][gridX] = newIndex;
+    drawAll(worksheetData);
+    buildPaletteEditor(currentPalette);
+    buildBulkSelect(currentPalette.length, Number(pencilNumberSelect.value) || 1);
+    buildNumberBulkSelect(currentPalette.length);
+  }
+
+  function getWhiteColorIndex() {
+    if (!currentPalette || currentPalette.length === 0) {
+      return 0;
+    }
+
+    let bestIndex = 0;
+    let bestDistance = Infinity;
+    const white = { r: 255, g: 255, b: 255 };
+
+    currentPalette.forEach((color, index) => {
+      const d = colorDistance(color, white);
+
+      if (d < bestDistance) {
+        bestDistance = d;
+        bestIndex = index;
+      }
+    });
+
+    return bestIndex;
+  }
+
+  function createPixelDataOnly(img, gridWidth, gridHeight) {
+    const tempCanvas = document.createElement("canvas");
+    const tempCtx = tempCanvas.getContext("2d");
+
+    tempCanvas.width = gridWidth;
+    tempCanvas.height = gridHeight;
+
+    const crop = getCoverCrop(img.width, img.height, gridWidth, gridHeight);
+
+    tempCtx.drawImage(
+      img,
+      crop.x,
+      crop.y,
+      crop.width,
+      crop.height,
+      0,
+      0,
+      gridWidth,
+      gridHeight
+    );
+
+    const imageData = tempCtx.getImageData(0, 0, gridWidth, gridHeight);
+    const pixels = [];
+
+    for (let i = 0; i < imageData.data.length; i += 4) {
+      pixels.push({
+        r: imageData.data[i],
+        g: imageData.data[i + 1],
+        b: imageData.data[i + 2]
+      });
+    }
+
+    lastPixelData = { pixels, gridWidth, gridHeight };
+  }
+
+  function getCoverCrop(imgWidth, imgHeight, targetWidth, targetHeight) {
+    const imgRatio = imgWidth / imgHeight;
+    const targetRatio = targetWidth / targetHeight;
+
+    let cropWidth;
+    let cropHeight;
+    let cropX;
+    let cropY;
+
+    if (imgRatio > targetRatio) {
+      cropHeight = imgHeight;
+      cropWidth = imgHeight * targetRatio;
+      cropX = (imgWidth - cropWidth) / 2;
+      cropY = 0;
+    } else {
+      cropWidth = imgWidth;
+      cropHeight = imgWidth / targetRatio;
+      cropX = 0;
+      cropY = (imgHeight - cropHeight) / 2;
+    }
+
+    return {
+      x: cropX,
+      y: cropY,
+      width: cropWidth,
+      height: cropHeight
+    };
+  }
+
+  function createPalette(pixels, colorCount) {
+    const sampled = pixels.slice();
+
+    let centroids = [];
+
+    for (let i = 0; i < colorCount; i++) {
+      const randomPixel = sampled[Math.floor(Math.random() * sampled.length)];
+      centroids.push({
+        r: randomPixel.r,
+        g: randomPixel.g,
+        b: randomPixel.b
+      });
+    }
+
+    for (let iteration = 0; iteration < 10; iteration++) {
+      const groups = Array.from({ length: colorCount }, () => []);
+
+      sampled.forEach((pixel) => {
+        const nearestIndex = findNearestColorIndex(pixel, centroids);
+        groups[nearestIndex].push(pixel);
+      });
+
+      centroids = centroids.map((centroid, index) => {
+        const group = groups[index];
+
+        if (group.length === 0) {
+          return centroid;
+        }
+
+        const sum = group.reduce(
+          (acc, pixel) => {
+            acc.r += pixel.r;
+            acc.g += pixel.g;
+            acc.b += pixel.b;
+            return acc;
+          },
+          { r: 0, g: 0, b: 0 }
+        );
+
+        return {
+          r: Math.round(sum.r / group.length),
+          g: Math.round(sum.g / group.length),
+          b: Math.round(sum.b / group.length)
+        };
+      });
+    }
+
+    centroids.sort((a, b) => {
+      return (a.r + a.g + a.b) - (b.r + b.g + b.b);
+    });
+
+    return centroids;
+  }
+
+  function ensureWhiteInPalette(palette) {
+    const result = clonePalette(palette);
+
+    const hasWhite = result.some((color) => {
+      return isNearWhite(color);
+    });
+
+    if (!hasWhite) {
+      result.push({ r: 255, g: 255, b: 255 });
+    } else {
+      result.forEach((color, index) => {
+        if (isNearWhite(color)) {
+          result[index] = { r: 255, g: 255, b: 255 };
+        }
+      });
+    }
+
+    result.sort((a, b) => {
+      return (a.r + a.g + a.b) - (b.r + b.g + b.b);
+    });
+
+    return mergeDuplicateColors(result);
+  }
+
+  function quantizeToPalette(pixels, gridWidth, gridHeight, palette) {
+    const numberGrid = [];
+
+    for (let y = 0; y < gridHeight; y++) {
+      const row = [];
+
+      for (let x = 0; x < gridWidth; x++) {
+        const index = y * gridWidth + x;
+        const p = pixels[index];
+
+        if (isNearWhite(p)) {
+          row.push(getNearestWhiteIndex(palette));
+        } else {
+          row.push(findNearestColorIndex(p, palette));
+        }
+      }
+
+      numberGrid.push(row);
+    }
+
+    return numberGrid;
+  }
+
+  function getNearestWhiteIndex(palette) {
+    let bestIndex = 0;
+    let bestDistance = Infinity;
+    const white = { r: 255, g: 255, b: 255 };
+
+    palette.forEach((color, index) => {
+      const d = colorDistance(color, white);
+
+      if (d < bestDistance) {
+        bestDistance = d;
+        bestIndex = index;
+      }
+    });
+
+    return bestIndex;
+  }
+
+  function findNearestColorIndex(pixel, palette) {
+    let nearestIndex = 0;
+    let nearestDistance = Infinity;
+
+    palette.forEach((color, index) => {
+      const distance = colorDistance(pixel, color);
+
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestIndex = index;
+      }
+    });
+
+    return nearestIndex;
+  }
+
+  function colorDistance(a, b) {
+    const dr = a.r - b.r;
+    const dg = a.g - b.g;
+    const db = a.b - b.b;
+
+    return dr * dr + dg * dg + db * db;
+  }
+
+  function isNearWhite(color) {
+    return color.r > 240 && color.g > 240 && color.b > 240;
+  }
+
+  function mergeDuplicateColors(palette) {
+    const result = [];
+    const map = new Map();
+
+    palette.forEach((color) => {
+      const key = rgbToHex(color.r, color.g, color.b).toUpperCase();
+
+      if (!map.has(key)) {
+        map.set(key, true);
+        result.push({ ...color });
+      }
+    });
+
+    return result;
+  }
+
+  function remapNumberGridToNewPalette(oldPalette, newPalette) {
+    if (!worksheetData) {
+      return;
+    }
+
+    const oldToNew = oldPalette.map((color) => {
+      return findNearestColorIndex(color, newPalette);
+    });
+
+    for (let y = 0; y < worksheetData.gridHeight; y++) {
+      for (let x = 0; x < worksheetData.gridWidth; x++) {
+        const oldIndex = worksheetData.numberGrid[y][x];
+        worksheetData.numberGrid[y][x] = oldToNew[oldIndex];
+      }
+    }
+  }
+
+  function countUsage(numberGrid, paletteLength) {
+    const counts = Array.from({ length: paletteLength }, () => 0);
+
+    for (let y = 0; y < numberGrid.length; y++) {
+      for (let x = 0; x < numberGrid[y].length; x++) {
+        const n = numberGrid[y][x];
+
+        if (counts[n] !== undefined) {
+          counts[n]++;
+        }
+      }
+    }
+
+    return counts;
+  }
+
+  function getUsedColorNumbers(numberGrid) {
+    const usedSet = new Set();
+
+    for (let y = 0; y < numberGrid.length; y++) {
+      for (let x = 0; x < numberGrid[y].length; x++) {
+        usedSet.add(numberGrid[y][x]);
+      }
+    }
+
+    return usedSet;
+  }
+
+  function deletePaletteColor(indexToDelete) {
+    if (!worksheetData || !currentPalette) {
+      return;
+    }
+
+    if (currentPalette.length <= 1) {
+      alert("최소 1개의 색은 남아 있어야 합니다.");
+      return;
+    }
+
+    saveStateForUndo();
+
+    const whiteIndex = getWhiteColorIndex();
+    const replacementIndex = whiteIndex;
+
+    if (indexToDelete === whiteIndex) {
+      const newPalette = clonePalette(currentPalette);
+      newPalette[indexToDelete] = { r: 255, g: 255, b: 255 };
+
+      currentPalette = newPalette;
+      worksheetData.palette = currentPalette;
+
+      alert("흰색은 지우개 색으로 사용되므로 삭제 대신 흰색으로 유지합니다.");
+      refreshAll();
+      return;
+    }
+
+    for (let y = 0; y < worksheetData.gridHeight; y++) {
+      for (let x = 0; x < worksheetData.gridWidth; x++) {
+        const n = worksheetData.numberGrid[y][x];
+
+        if (n === indexToDelete) {
+          worksheetData.numberGrid[y][x] = replacementIndex;
+        }
+      }
+    }
+
+    const newPalette = clonePalette(currentPalette);
+    newPalette.splice(indexToDelete, 1);
+
+    for (let y = 0; y < worksheetData.gridHeight; y++) {
+      for (let x = 0; x < worksheetData.gridWidth; x++) {
+        const n = worksheetData.numberGrid[y][x];
+
+        if (n > indexToDelete) {
+          worksheetData.numberGrid[y][x] = n - 1;
+        }
+      }
+    }
+
+    currentPalette = newPalette;
+    worksheetData.palette = currentPalette;
+    originalPalette = clonePalette(currentPalette);
+
+    refreshAll();
+  }
+
+  function refreshAll(selectedPencilNumber) {
+    drawAll(worksheetData);
+    buildPaletteEditor(currentPalette);
+
+    const selected = selectedPencilNumber || Number(pencilNumberSelect.value) || 1;
+    buildPencilSelect(currentPalette.length, selected);
+    buildBulkSelect(currentPalette.length, selected);
+    buildNumberBulkSelect(currentPalette.length);
+
+    updatePencilColorPreview();
+    updateHistoryButtons();
+    applyZoom();
+  }
+
+  function drawAll(data) {
+    drawWorksheet(data);
+    drawPreview(data);
+  }
+
+  function getArtTitle() {
+    const value = artTitleInput.value.trim();
+    return value || "픽셀아트 색칠 학습지";
+  }
+
+  function drawWorksheet(data) {
+    const { gridWidth, gridHeight, palette, numberGrid } = data;
+
+    const title = getArtTitle();
+    const usedNumbers = getUsedColorNumbers(numberGrid);
+    const usedCount = usedNumbers.size;
+    const legendHeight = Math.ceil(usedCount / 4) * 42 + 40;
+
+    worksheetCanvas.width = gridWidth * cellSize + margin * 2;
+    worksheetCanvas.height = titleHeight + gridHeight * cellSize + legendHeight + margin;
+
+    worksheetCtx.fillStyle = "white";
+    worksheetCtx.fillRect(0, 0, worksheetCanvas.width, worksheetCanvas.height);
+
+    worksheetCtx.fillStyle = "#222";
+    worksheetCtx.font = "bold 24px Arial";
+    worksheetCtx.textAlign = "center";
+    worksheetCtx.textBaseline = "middle";
+    worksheetCtx.fillText(title, worksheetCanvas.width / 2, 28);
+
+    worksheetCtx.fillStyle = "#555";
+    worksheetCtx.font = "12px Arial";
+    worksheetCtx.fillText(`${gridWidth}칸 × ${gridHeight}칸`, worksheetCanvas.width / 2, 48);
+
+    const startX = margin;
+    const startY = titleHeight;
+
+    worksheetCtx.font = "11px Arial";
+    worksheetCtx.textAlign = "center";
+    worksheetCtx.textBaseline = "middle";
+
+    for (let y = 0; y < gridHeight; y++) {
+      for (let x = 0; x < gridWidth; x++) {
+        const colorIndex = numberGrid[y][x];
+        const displayNumber = colorIndex + 1;
+
+        worksheetCtx.fillStyle = "white";
+        worksheetCtx.fillRect(
+          startX + x * cellSize,
+          startY + y * cellSize,
+          cellSize,
+          cellSize
+        );
+
+        worksheetCtx.strokeStyle = "#999";
+        worksheetCtx.lineWidth = 1;
+        worksheetCtx.strokeRect(
+          startX + x * cellSize,
+          startY + y * cellSize,
+          cellSize,
+          cellSize
+        );
+
+        worksheetCtx.fillStyle = "#111";
+        worksheetCtx.fillText(
+          String(displayNumber),
+          startX + x * cellSize + cellSize / 2,
+          startY + y * cellSize + cellSize / 2
+        );
+      }
+    }
+
+    drawLegendOnCanvas(
+      worksheetCtx,
+      palette,
+      usedNumbers,
+      margin,
+      startY + gridHeight * cellSize + 30
+    );
+  }
+
+  function drawPreview(data) {
+    const { gridWidth, gridHeight, palette, numberGrid } = data;
+
+    const title = getArtTitle();
+    const previewMargin = 20;
+    const previewTitleHeight = 46;
+
+    previewCanvas.width = gridWidth * cellSize + previewMargin * 2;
+    previewCanvas.height = previewTitleHeight + gridHeight * cellSize + previewMargin;
+
+    previewCtx.fillStyle = "white";
+    previewCtx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
+
+    previewCtx.fillStyle = "#222";
+    previewCtx.font = "bold 18px Arial";
+    previewCtx.textAlign = "center";
+    previewCtx.textBaseline = "middle";
+    previewCtx.fillText(title + " 완성 예시", previewCanvas.width / 2, 20);
+
+    previewCtx.fillStyle = "#555";
+    previewCtx.font = "11px Arial";
+    previewCtx.fillText(`${gridWidth}칸 × ${gridHeight}칸`, previewCanvas.width / 2, 38);
+
+    const startX = previewMargin;
+    const startY = previewTitleHeight;
+
+    for (let y = 0; y < gridHeight; y++) {
+      for (let x = 0; x < gridWidth; x++) {
+        const colorIndex = numberGrid[y][x];
+        const color = palette[colorIndex] || { r: 255, g: 255, b: 255 };
+
+        previewCtx.fillStyle = rgbToString(color);
+        previewCtx.fillRect(
+          startX + x * cellSize,
+          startY + y * cellSize,
+          cellSize,
+          cellSize
+        );
+
+        previewCtx.strokeStyle = "#EEE";
+        previewCtx.lineWidth = 0.5;
+        previewCtx.strokeRect(
+          startX + x * cellSize,
+          startY + y * cellSize,
+          cellSize,
+          cellSize
+        );
+      }
+    }
+  }
+
+  function drawLegendOnCanvas(ctx, palette, usedNumbers, startX, startY) {
+    ctx.fillStyle = "#222";
+    ctx.font = "bold 18px Arial";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText("색깔 번호표", startX, startY);
+
+    const itemWidth = 150;
+    const itemHeight = 36;
+    const columns = 4;
+
+    const usedArray = Array.from(usedNumbers).sort((a, b) => a - b);
+
+    usedArray.forEach((colorIndex, idx) => {
+      const color = palette[colorIndex];
+      const displayNumber = colorIndex + 1;
+
+      const col = idx % columns;
+      const row = Math.floor(idx / columns);
+
+      const x = startX + col * itemWidth;
+      const y = startY + 30 + row * itemHeight;
+
+      ctx.fillStyle = rgbToString(color);
+      ctx.fillRect(x, y, 26, 26);
+
+      ctx.strokeStyle = "#666";
+      ctx.strokeRect(x, y, 26, 26);
+
+      ctx.fillStyle = "#111";
+      ctx.font = "14px Arial";
+      ctx.fillText(`${displayNumber}번`, x + 36, y + 13);
+    });
+  }
+
+  function buildPaletteEditor(palette) {
+    paletteEditor.innerHTML = "";
+
+    const counts = worksheetData
+      ? countUsage(worksheetData.numberGrid, palette.length)
+      : [];
+
+    palette.forEach((color, index) => {
+      const row = document.createElement("div");
+      row.className = "palette-row";
+
+      const displayNumber = index + 1;
+
+      const num = document.createElement("div");
+      num.className = "num";
+      num.textContent = `${displayNumber}`;
+
+      const colorInput = document.createElement("input");
+      colorInput.type = "color";
+      colorInput.value = rgbToHex(color.r, color.g, color.b);
+      colorInput.dataset.index = index;
+
+      const hexInput = document.createElement("input");
+      hexInput.type = "text";
+      hexInput.value = colorInput.value.toUpperCase();
+      hexInput.maxLength = 7;
+      hexInput.dataset.index = index;
+
+      const usage = document.createElement("div");
+      usage.className = "usage";
+      usage.textContent = `${counts[index] || 0}`;
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "danger";
+      deleteBtn.textContent = "삭제";
+
+      colorInput.addEventListener("focus", () => {
+        savePaletteStateOnce(row);
+      });
+
+      hexInput.addEventListener("focus", () => {
+        savePaletteStateOnce(row);
+      });
+
+      colorInput.addEventListener("input", () => {
+        hexInput.value = colorInput.value.toUpperCase();
+        applyPaletteChangeFromEditor();
+      });
+
+      hexInput.addEventListener("input", () => {
+        const val = hexInput.value.trim();
+
+        if (/^#([0-9A-Fa-f]{6})$/.test(val)) {
+          colorInput.value = val;
+          applyPaletteChangeFromEditor();
+        }
+      });
+
+      colorInput.addEventListener("blur", () => {
+        row.dataset.saved = "";
+      });
+
+      hexInput.addEventListener("blur", () => {
+        row.dataset.saved = "";
+      });
+
+      deleteBtn.addEventListener("click", () => {
+        deletePaletteColor(index);
+      });
+
+      row.appendChild(num);
+      row.appendChild(colorInput);
+      row.appendChild(hexInput);
+      row.appendChild(usage);
+      row.appendChild(deleteBtn);
+
+      paletteEditor.appendChild(row);
+    });
+  }
+
+  function savePaletteStateOnce(row) {
+    if (!worksheetData) {
+      return;
+    }
+
+    if (row.dataset.saved === "1") {
+      return;
+    }
+
+    saveStateForUndo();
+    row.dataset.saved = "1";
+  }
+
+  function applyPaletteChangeFromEditor() {
+    const rows = paletteEditor.querySelectorAll(".palette-row");
+
+    if (!rows.length || !worksheetData) {
+      return;
+    }
+
+    const newPalette = [];
+
+    rows.forEach((row) => {
+      const colorInput = row.querySelector('input[type="color"]');
+      const hex = colorInput.value;
+      newPalette.push(hexToRgb(hex));
+    });
+
+    currentPalette = clonePalette(newPalette);
+    worksheetData.palette = currentPalette;
+
+    drawAll(worksheetData);
+
+    const selected = Number(pencilNumberSelect.value) || 1;
+    buildPencilSelect(currentPalette.length, selected);
+    buildBulkSelect(currentPalette.length, Number(bulkTargetSelect.value) || selected);
+    buildNumberBulkSelect(currentPalette.length);
+
+    updatePencilColorPreview();
+    updateHistoryButtons();
+    applyZoom();
+  }
+
+  function buildPencilSelect(count, selectedNumber) {
+    const currentValue = selectedNumber || Number(pencilNumberSelect.value) || 1;
+
+    pencilNumberSelect.innerHTML = "";
+
+    for (let i = 1; i <= count; i++) {
+      const opt = document.createElement("option");
+      opt.value = String(i);
+      opt.textContent = `${i}번`;
+      pencilNumberSelect.appendChild(opt);
+    }
+
+    if (count > 0) {
+      const safeValue = Math.min(Math.max(currentValue, 1), count);
+      pencilNumberSelect.value = String(safeValue);
+    }
+  }
+
+  function buildBulkSelect(count, selectedNumber) {
+    const currentValue = selectedNumber || Number(bulkTargetSelect.value) || 1;
+
+    bulkTargetSelect.innerHTML = "";
+
+    for (let i = 1; i <= count; i++) {
+      const opt = document.createElement("option");
+      opt.value = String(i);
+      opt.textContent = `${i}번`;
+      bulkTargetSelect.appendChild(opt);
+    }
+
+    if (count > 0) {
+      const safeValue = Math.min(Math.max(currentValue, 1), count);
+      bulkTargetSelect.value = String(safeValue);
+    }
+
+    bulkApplyBtn.disabled = count === 0;
+  }
+
+  function buildNumberBulkSelect(count, selectedFrom, selectedTo) {
+    const fromValue = selectedFrom || Number(numberFromSelect.value) || 1;
+    const toValue = selectedTo || Number(numberToSelect.value) || Math.min(2, count);
+
+    numberFromSelect.innerHTML = "";
+    numberToSelect.innerHTML = "";
+
+    for (let i = 1; i <= count; i++) {
+      const fromOpt = document.createElement("option");
+      fromOpt.value = String(i);
+      fromOpt.textContent = `${i}번`;
+      numberFromSelect.appendChild(fromOpt);
+
+      const toOpt = document.createElement("option");
+      toOpt.value = String(i);
+      toOpt.textContent = `${i}번`;
+      numberToSelect.appendChild(toOpt);
+    }
+
+    if (count > 0) {
+      const safeFrom = Math.min(Math.max(fromValue, 1), count);
+      const safeTo = Math.min(Math.max(toValue, 1), count);
+
+      numberFromSelect.value = String(safeFrom);
+      numberToSelect.value = String(safeTo);
+    }
+
+    numberBulkApplyBtn.disabled = count < 2;
+  }
+
+  function clonePalette(palette) {
+    return palette.map(color => ({ ...color }));
+  }
+
+  function cloneGrid(grid) {
+    return grid.map(row => row.slice());
+  }
+
+  function makeSafeFileName(title) {
+    return title
+      .replace(/[\\/:*?"<>|]/g, "")
+      .replace(/\s+/g, "_")
+      .slice(0, 40) || "pixel-art-worksheet";
+  }
+
+  function rgbToHex(r, g, b) {
+    return (
+      "#" +
+      [r, g, b]
+        .map((v) => {
+          const h = v.toString(16);
+          return h.length === 1 ? "0" + h : h;
+        })
+        .join("")
+    );
+  }
+
+  function hexToRgb(hex) {
+    const clean = hex.replace("#", "");
+    const num = parseInt(clean, 16);
+
+    return {
+      r: (num >> 16) & 255,
+      g: (num >> 8) & 255,
+      b: num & 255
+    };
+  }
+
+  function rgbToString(color) {
+    return `rgb(${color.r}, ${color.g}, ${color.b})`;
+  }
+
+  applyZoom();
+</script>
+</body>
+</html>
